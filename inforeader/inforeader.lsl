@@ -16,25 +16,27 @@
 
 
 // to debug important things for developing
-integer DEBUG=1;
+integer DEBUG=0;
 string MYNAME="INFOBOOK V1.0";
 integer ROWS=10;
 integer COLS=40;
-float TIMERINTERVAL=5.0;
+
 
 
 // options related
-float optionsTimer=0; // can be 0=off, 5=on for 5 seconds delay
+float optionsTimer=10; // can be 10 or 60 (10 sec or 60 sec before switching)
 integer optionsPrivacy=2; // 0 public, 1=group, 2=owner, default owner
 integer optionsWRAP=1; // 0 don't wrap 1 wrap lines
+integer play=0; // if automatic slideshow on
 
 
 // items in MENU
 string RESET="reset";
 string PRIVACY="privacy";
-string TIMER="timer";
+string TIMER="timer(10/60s)";
 string WRAP="wrap";
 string HELP="help";
+string MENU="menu";
 
 
 // DEBUG/COMMUNICATION FUNCTIONS FUNCTIONS
@@ -79,7 +81,7 @@ integer privacy(key id){
 // Help will display README??
 help(){
 	info(MYNAME);
-	info("touch the caption for menu. Touch each line for opening up a browser on that news");
+	info("touch the caption for menu.");
 	info(" do slideshows ");
 }
 
@@ -109,13 +111,19 @@ XYshow(integer row, string x)
 // ============================================
 XYclean(){
 	integer i;
-	for(i=0;i<10;i++){
+	for(i=0;i<ROWS;i++){
 		XYshow(i," ");
 	}
 	
 }
-setTitle(string title)
+XYtitle(string title)
 {
+	integer padding=(20-llStringLength(title))/2;
+	while(padding>0) {
+		title=" "+title;
+		padding--;
+	}
+	XYshow(ROWS,title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +148,7 @@ doListen()
 // ==============================================================================
 doDialog()
 {
-	list actions=[ HELP, RESET, PRIVACY, TIMER, WRAP ];
+	list actions=[ HELP, RESET, PRIVACY, TIMER, WRAP, MENU ];
 	debug("dialog on "+(string)MENUCHANNEL);
 	llDialog(llDetectedKey(0), "Choose an action", actions, MENUCHANNEL); // present dialog on click
 }
@@ -148,6 +156,9 @@ doDialog()
 // interpretMenu. If anything correctly done returns 1 otherwise 0
 integer interpretMenu(key id,string message)
 {
+	if(message == MENU){
+		state index;
+	}
 	// handle menu
 	if(message == PRIVACY){
 		if( (id==llGetOwner()) ||
@@ -172,17 +183,17 @@ integer interpretMenu(key id,string message)
 	}
 	
 	if(message == TIMER){
-		if(optionsTimer==5)
+		if(optionsTimer==10.0)
 		{
-			llSetTimerEvent(0.0);
-			optionsTimer=0;
-			info("Timer switched off");
+			
+			optionsTimer=60.0;
+			info("Timer time 60sec");
 		}
 		else
 		{
-			llSetTimerEvent(TIMERINTERVAL);
-			optionsTimer=TIMERINTERVAL;
-			info("Timer switched on");
+			
+			optionsTimer=10.0;
+			info("Timer time 10sec");
 			
 		}
 		return 1;
@@ -237,13 +248,33 @@ refreshContent(){
 		} else XYshow(i," ");
 	}
 }
-
+doPlay()
+{
+	
+	indexContent+=ROWS;
+	if((indexContent+1)>numContent)
+	{
+		llSetTimerEvent(0.0); // stop timer for now waiting completion of reading
+		indexNotecard+=1;
+		if((indexNotecard+1)>numNotecards) indexNotecard=0;
+		currentNotecard=llList2String(notecards,indexNotecard);
+		indexContent=0; numContent=0; notecardLine=0; contents=[];
+		llGetNotecardLine(currentNotecard, numContent);
+		XYtitle(currentNotecard);
+	}
+	else
+	{
+		refreshContent();
+	}
+	
+}
 // internal things for index status
 list notecards;
 string currentNotecard;
 integer notecardLine; // dataserver temporary
 integer numNotecards=0;
 integer indexNotecard=0;
+
 key notecardKey;
 
 
@@ -251,6 +282,8 @@ key notecardKey;
 list contents=[];
 integer indexContent=0;
 integer numContent=0;
+
+
 
 // default will just set up everything and then pass to proper states:
 // index and content
@@ -260,6 +293,8 @@ default
 	{
 		llResetScript();
 	}
+	touch_start(integer num){
+	}
 	state_entry()
 	{
 		// random channel to be choosen for substates
@@ -268,8 +303,11 @@ default
 		
 		integer i;
 		notecards=[];
-		for(i=0;i<llGetInventoryNumber(INVENTORY_NOTECARD);i++)
+		for(i=0;i<llGetInventoryNumber(INVENTORY_NOTECARD);i++){
 			notecards+=llGetInventoryName(INVENTORY_NOTECARD,i);
+			numNotecards++;
+		}
+		
 		
 		llSetText(MYNAME,<0,0,0>,0);
 		help();
@@ -288,11 +326,14 @@ state index
 {
 	// on entering in this state must display the listing of notecards available
 	state_entry(){
+		debug("Entering index state");
 		indexNotecard=0;
 		refreshIndex();
 		contents=[];
+		XYtitle("INDEX");
 		// allow menu actions
 		doListen();
+		play=0;
 	}
 	
 	
@@ -336,8 +377,16 @@ state index
 			if((indexNotecard+1)>numNotecards) indexNotecard=0;
 			
 			refreshIndex();
-			return 1;
+			return;
 		}
+		if(objname=="PLAY"){
+			play=1;
+			currentNotecard=llList2String(notecards,indexNotecard);
+			info("slideshow starting");
+			state content;
+			
+		}
+		
 		
 		
 		// display menu if not clicked on a cell or up/down
@@ -368,8 +417,10 @@ state content
 	// notecard
 	state_entry(){
 		
-		indexContent=0; numContent=0;
+		indexContent=0; numContent=0; notecardLine=0;
 		llGetNotecardLine(currentNotecard, numContent);
+		XYtitle(currentNotecard);
+		if(play==1) llSetTimerEvent(optionsTimer);
 		
 	}
 	
@@ -384,24 +435,49 @@ state content
 		
 		
 		
-		if(objname=="UP") {
+		if(objname=="UP")
+		{
 			indexContent-=ROWS;
 			if(indexContent<0)indexContent=0;
 			
 			refreshContent();
 			return;
 		}
-		if(objname=="DOWN") {
+		if(objname=="DOWN")
+		{
 			indexContent+=ROWS;
 			if((indexContent+1)>numContent)indexContent=0;
 			
-			refreshIndex();
-			return 1;
+			refreshContent();
+			return;
 		}
-		
+		if(objname=="PLAY") {
+			if(play==0)
+			{
+				llSetTimerEvent(optionsTimer);
+				play=1;
+				doPlay();
+				info("Slideshow started");
+			}
+			return;
+		}
+		if(objname=="STOP") {
+			if(play==1)
+			{
+				play=0;
+				llSetTimerEvent(0.0);
+				info("Slideshow stopped");
+			}
+			return;
+		}
 		
 		// display menu if not clicked on a cell or up/down
 		doDialog();
+	}
+	timer()
+	{
+		debug("timer started");
+		doPlay();
 	}
 	// instructions must be something like
 	listen(integer channel, string name, key id, string message)
@@ -434,25 +510,31 @@ state content
 			// how many real rows to display, wrap lines longer than if
 			// wrap option had been selected
 			if(optionsWRAP==1){
-				integer numrows=llStringLength(data)/COLS;
+				integer numrows=llStringLength(data)/COLS+1;
 				integer offset=0;
-				for(i=0;i<=numrows;i++){
+				for(i=0;i<numrows;i++){
 					string msg=llGetSubString(data,offset,offset+COLS);
 					contents+=msg;
+					offset+=COLS;
+					numContent++;
 				}
 			}
-			else
+			else {
 				contents+=data;
+				numContent++;
+			}
+			notecardLine++;
 			
 			
 			// now go fetching next dont do if line > 9
-			llGetNotecardLine(currentNotecard, numContent);
+			llGetNotecardLine(currentNotecard, notecardLine);
 			
 		} else {
 			debug("Finishing Read notecard.");
 			// display it
 			doListen();
 			refreshContent();
+			if(play==1) llSetTimerEvent(optionsTimer);
 		}
 		
 	}
