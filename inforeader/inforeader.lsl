@@ -44,45 +44,46 @@ string MENU="menu";
 // ===========================================================
 debug(string x)
 {
-	if(DEBUG==1) llOwnerSay("DEBUG: "+x);
+    if(DEBUG==1) llOwnerSay("DEBUG: "+x);
 }
 info(string x)
 {
-	llSay(0,x);
+    llSay(0,x);
+    llSetText("",<1,1,1>,1);
 }
 error(string x)
 {
-	info("ERROR: "+x);
+    info("ERROR: "+x);
 }
 
 // Handle privacy
 
 integer privacy(key id){
-	// allow public only clicking on a news or up/down
-	if( id != llGetOwner() )
-	{
-		
-		// group only if key is from same group
-		if(optionsPrivacy==1 && !llSameGroup(id) ) {
-			error("Not same group");
-			return 0;
-		}
-		// only owner can do
-		if(optionsPrivacy==2 ) {
-			error("Not owner");
-			return 0;
-		}
-		
-	}
-	// ok we have the right of doing this
-	return 1;
+    // allow public only clicking on a news or up/down
+    if( id != llGetOwner() )
+    {
+        
+        // group only if key is from same group
+        if(optionsPrivacy==1 && !llSameGroup(id) ) {
+            error("Not same group");
+            return 0;
+        }
+        // only owner can do
+        if(optionsPrivacy==2 ) {
+            error("Not owner");
+            return 0;
+        }
+        
+    }
+    // ok we have the right of doing this
+    return 1;
 }
 
 // Help will display README??
 help(){
-	info(MYNAME);
-	info("touch the caption for menu.");
-	info(" do slideshows ");
+    info(MYNAME);
+    info("touch the caption for menu.");
+    info(" do slideshows ");
 }
 
 // XYshow
@@ -103,27 +104,27 @@ integer RESCAN_LINKSET      = 204008;
 
 XYshow(integer row, string x)
 {
-	llMessageLinked(LINK_THIS,DISPLAY_STRING,x,(string)row);
-	
+    llMessageLinked(LINK_THIS,DISPLAY_STRING,x,(string)row);
+    
 }
 // CLEAN
 // be sure the whiteboard is clean now
 // ============================================
 XYclean(){
-	integer i;
-	for(i=0;i<ROWS;i++){
-		XYshow(i," ");
-	}
-	
+    integer i;
+    for(i=0;i<ROWS;i++){
+        XYshow(i," ");
+    }
+    
 }
 XYtitle(string title)
 {
-	integer padding=(20-llStringLength(title))/2;
-	while(padding>0) {
-		title=" "+title;
-		padding--;
-	}
-	XYshow(ROWS,title);
+    integer padding=(20-llStringLength(title))/2;
+    while(padding>0) {
+        title=" "+title;
+        padding--;
+    }
+    XYshow(ROWS,title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -131,16 +132,16 @@ XYtitle(string title)
 integer MENUCHANNEL; // listening here for menu using random functions
 // selects a true random channel number
 randomchannel(){
-	integer get_time = llGetUnixTime()/2;
-	float time = llFrand((float)get_time);
-	MENUCHANNEL = llFloor(time) + 100000000;
-	
+    integer get_time = llGetUnixTime()/2;
+    float time = llFrand((float)get_time);
+    MENUCHANNEL = llFloor(time) + 100000000;
+    
 }
 
 // do effective listening
 doListen()
 {
-	llListen(MENUCHANNEL,"",NULL_KEY,"");
+    llListen(MENUCHANNEL,"",NULL_KEY,"");
 }
 
 // DODIALOG
@@ -148,70 +149,70 @@ doListen()
 // ==============================================================================
 doDialog()
 {
-	list actions=[ HELP, RESET, PRIVACY, TIMER, WRAP, MENU ];
-	debug("dialog on "+(string)MENUCHANNEL);
-	llDialog(llDetectedKey(0), "Choose an action", actions, MENUCHANNEL); // present dialog on click
+    list actions=[ HELP, RESET, PRIVACY, TIMER, WRAP, MENU ];
+    debug("dialog on "+(string)MENUCHANNEL);
+    llDialog(llDetectedKey(0), "Choose an action", actions, MENUCHANNEL); // present dialog on click
 }
 
 // interpretMenu. If anything correctly done returns 1 otherwise 0
 integer interpretMenu(key id,string message)
 {
-	if(message == MENU){
-		state index;
-	}
-	// handle menu
-	if(message == PRIVACY){
-		if( (id==llGetOwner()) ||
-			llSameGroup(id) ){
-			++optionsPrivacy;
-			if(optionsPrivacy>2)optionsPrivacy=0;
-			if(optionsPrivacy==0)info("changing privacy to PUBLIC");
-			if(optionsPrivacy==1)info("changing privacy to GROUP");
-			if(optionsPrivacy==2)info("changing privacy to OWNER");
-		}
-		return 1;
-	}
-	if(message == RESET ){
-		info("resetting script");
-		llResetScript();
-		return 1;
-	}
-	
-	if(message == HELP) {
-		help();
-		return 1;
-	}
-	
-	if(message == TIMER){
-		if(optionsTimer==10.0)
-		{
-			
-			optionsTimer=60.0;
-			info("Timer time 60sec");
-		}
-		else
-		{
-			
-			optionsTimer=10.0;
-			info("Timer time 10sec");
-			
-		}
-		return 1;
-		
-	}
-	if(message == WRAP ){
-		if(optionsWRAP==0)
-		{
-			optionsWRAP=1;
-			info("Wrap ON");
-		}
-		else
-		{
-			optionsWRAP=0;
-			info("Wrap OFF");
-		}
-	}
-	return 0;
+    if(message == MENU){
+        state index;
+    }
+    // handle menu
+    if(message == PRIVACY){
+        if( (id==llGetOwner()) ||
+            llSameGroup(id) ){
+            ++optionsPrivacy;
+            if(optionsPrivacy>2)optionsPrivacy=0;
+            if(optionsPrivacy==0)info("changing privacy to PUBLIC");
+            if(optionsPrivacy==1)info("changing privacy to GROUP");
+            if(optionsPrivacy==2)info("changing privacy to OWNER");
+        }
+        return 1;
+    }
+    if(message == RESET ){
+        info("resetting script");
+        llResetScript();
+        return 1;
+    }
+    
+    if(message == HELP) {
+        help();
+        return 1;
+    }
+    
+    if(message == TIMER){
+        if(optionsTimer==10.0)
+        {
+            
+            optionsTimer=60.0;
+            info("Timer time 60sec");
+        }
+        else
+        {
+
+            optionsTimer=10.0;
+            info("Timer time 10sec");
+            
+        }
+        return 1;
+        
+    }
+    if(message == WRAP ){
+        if(optionsWRAP==0)
+        {
+            optionsWRAP=1;
+            info("Wrap ON");
+        }
+        else
+        {
+            optionsWRAP=0;
+            info("Wrap OFF");
+        }
+    }
+    return 0;
 }
 
 // REFRESH INDEX
@@ -219,17 +220,17 @@ integer interpretMenu(key id,string message)
 // using indexNotecard for starting index
 // =========================================
 refreshIndex(){
-	// loop over all first titles
-	integer i;
-	integer j;
-	
-	for(i=0;i<10;i++){
-		j=i+indexNotecard;
-		if(j<numNotecards){
-			XYshow(i,">"+llList2String(notecards,j));
-		} else XYshow(i," ");
-	}
-	
+    // loop over all first titles
+    integer i;
+    integer j;
+    
+    for(i=0;i<10;i++){
+        j=i+indexNotecard;
+        if(j<numNotecards){
+            XYshow(i,">"+llList2String(notecards,j));
+        } else XYshow(i," ");
+    }
+    
 }
 
 // REFRESH CONTENT
@@ -237,36 +238,41 @@ refreshIndex(){
 // using indexNotecard for starting index
 // =========================================
 refreshContent(){
-	// loop over all first titles
-	integer i;
-	integer j;
-	
-	for(i=0;i<10;i++){
-		j=i+indexContent;
-		if(j<numContent){
-			XYshow(i,llList2String(contents,j));
-		} else XYshow(i," ");
-	}
+    // loop over all first titles
+    integer i;
+    integer j;
+    
+    for(i=0;i<10;i++){
+        j=i+indexContent;
+        if(j<numContent){
+            XYshow(i,llList2String(contents,j));
+        } else XYshow(i," ");
+    }
 }
 doPlay()
 {
-	
-	indexContent+=ROWS;
-	if((indexContent+1)>numContent)
-	{
-		llSetTimerEvent(0.0); // stop timer for now waiting completion of reading
-		indexNotecard+=1;
-		if((indexNotecard+1)>numNotecards) indexNotecard=0;
-		currentNotecard=llList2String(notecards,indexNotecard);
-		indexContent=0; numContent=0; notecardLine=0; contents=[];
-		llGetNotecardLine(currentNotecard, numContent);
-		XYtitle(currentNotecard);
-	}
-	else
-	{
-		refreshContent();
-	}
-	
+
+        indexContent+=ROWS;
+        if((indexContent+1)>numContent)
+        {
+            llSetTimerEvent(0.0); // stop timer for now waiting completion of reading
+            indexNotecard+=1;
+            if((indexNotecard+1)>numNotecards) indexNotecard=0;
+            showNotecard();
+        }
+        else
+        {
+            refreshContent();
+        }
+
+}
+showNotecard()
+{
+    indexContent=0; numContent=0; notecardLine=0; contents=[];
+    currentNotecard=llList2String(notecards,indexNotecard);
+    llGetNotecardLine(currentNotecard, numContent);
+    XYtitle(currentNotecard);
+    info("Showing notecard "+currentNotecard);
 }
 // internal things for index status
 list notecards;
@@ -289,30 +295,30 @@ integer numContent=0;
 // index and content
 default
 {
-	on_rez(integer parm)
-	{
-		llResetScript();
-	}
-	touch_start(integer num){
-	}
-	state_entry()
-	{
-		// random channel to be choosen for substates
-		randomchannel();
-		debug("Listening on menu channel "+(string)MENUCHANNEL);
-		
-		integer i;
-		notecards=[];
-		for(i=0;i<llGetInventoryNumber(INVENTORY_NOTECARD);i++){
-			notecards+=llGetInventoryName(INVENTORY_NOTECARD,i);
-			numNotecards++;
-		}
-		
-		
-		llSetText(MYNAME,<0,0,0>,0);
-		help();
-		state index;
-	}
+    on_rez(integer parm)
+    {
+        llResetScript();
+    }
+    touch_start(integer num){
+    }
+    state_entry()
+    {
+        // random channel to be choosen for substates
+        randomchannel();
+        debug("Listening on menu channel "+(string)MENUCHANNEL);
+        
+        integer i;
+        notecards=[];
+        for(i=0;i<llGetInventoryNumber(INVENTORY_NOTECARD);i++){
+            notecards+=llGetInventoryName(INVENTORY_NOTECARD,i);
+            numNotecards++;
+        }
+        
+        
+        llSetText(MYNAME,<0,0,0>,0);
+        help();
+        state index;
+    }
 }
 
 
@@ -324,89 +330,89 @@ default
 //////////////////////////////////////////////////////////////////
 state index
 {
-	// on entering in this state must display the listing of notecards available
-	state_entry(){
-		debug("Entering index state");
-		indexNotecard=0;
-		refreshIndex();
-		contents=[];
-		XYtitle("INDEX");
-		// allow menu actions
-		doListen();
-		play=0;
-	}
-	
-	
-	touch_start(integer total_number)
-	{
-		// check we can do it
-		if(privacy(llDetectedKey(0))==0) return;
-		
-		// do whatever needed
-		string objname=llGetLinkName (llDetectedLinkNumber(0));
-		debug("clicked object : "+objname);
-		
-		// if clicked one of the component lines
-		// detect the line no and launch the proper external
-		// http viewer
-		
-		if(llGetSubString(objname,0,8)=="xyzzytext"){
-			
-			// find the real row
-			integer x=(integer)llGetSubString(objname,10,-1);
-			if(x<10){
-				currentNotecard=llList2String(notecards,x);
-				debug("Should open notecard: "+llList2String(notecards,x));
-				
-				// change state to render actual notecard
-				state content;
-			}
-			
-		}
-		
-		
-		if(objname=="UP") {
-			indexNotecard-=ROWS;
-			if(indexNotecard<0)indexNotecard=0;
-			
-			refreshIndex();
-			return;
-		}
-		if(objname=="DOWN") {
-			indexNotecard+=ROWS;
-			if((indexNotecard+1)>numNotecards) indexNotecard=0;
-			
-			refreshIndex();
-			return;
-		}
-		if(objname=="PLAY"){
-			play=1;
-			currentNotecard=llList2String(notecards,indexNotecard);
-			info("slideshow starting");
-			state content;
-			
-		}
-		
-		
-		
-		// display menu if not clicked on a cell or up/down
-		doDialog();
-	}
-	// instructions must be something like
-	// 0:pippo meaning write pippo on row 0
-	listen(integer channel, string name, key id, string message)
-	{
-		debug("received on channel "+(string)channel+" msg "+message);
-		
-		
-		// privacy checking
-		if(privacy(id)==0) return;
-		
-		if(interpretMenu(id,message)==1) return;
-		
-		
-		
-	}
+    // on entering in this state must display the listing of notecards available
+    state_entry(){
+        debug("Entering index state");
+        indexNotecard=0;
+        refreshIndex();
+        contents=[];
+        XYtitle("INDEX");
+        // allow menu actions
+        doListen();
+        play=0;
+    }
+    
+    
+    touch_start(integer total_number)
+    {
+        // check we can do it
+        if(privacy(llDetectedKey(0))==0) return;
+        
+        // do whatever needed
+        string objname=llGetLinkName (llDetectedLinkNumber(0));
+        debug("clicked object : "+objname);
+        
+        // if clicked one of the component lines
+        // detect the line no and launch the proper external
+        // http viewer
+        
+        if(llGetSubString(objname,0,8)=="xyzzytext"){
+            
+            // find the real row
+            integer x=(integer)llGetSubString(objname,10,-1);
+            if(x<10){
+                currentNotecard=llList2String(notecards,x);
+                debug("Should open notecard: "+llList2String(notecards,x));
+                
+                // change state to render actual notecard
+                state content;
+            }
+            
+        }
+        
+        
+        if(objname=="UP") {
+            indexNotecard-=ROWS;
+            if(indexNotecard<0)indexNotecard=0;
+            
+            refreshIndex();
+            return;
+        }
+        if(objname=="DOWN") {
+            indexNotecard+=ROWS;
+            if((indexNotecard+1)>numNotecards) indexNotecard=0;
+            
+            refreshIndex();
+            return;
+        }
+        if(objname=="PLAY"){
+            play=1;
+            currentNotecard=llList2String(notecards,indexNotecard);
+            info("slideshow starting");
+            state content;
+            
+        }
+        
+        
+        
+        // display menu if not clicked on a cell or up/down
+        doDialog();
+    }
+    // instructions must be something like
+    // 0:pippo meaning write pippo on row 0
+    listen(integer channel, string name, key id, string message)
+    {
+        debug("received on channel "+(string)channel+" msg "+message);
+        
+        
+        // privacy checking
+        if(privacy(id)==0) return;
+        
+        if(interpretMenu(id,message)==1) return;
+        
+        
+        
+    }
 }
 
 
@@ -414,129 +420,143 @@ state index
 // must openup the currentNotecard and show its content
 state content
 {
-	// notecard
-	state_entry(){
-		
-		indexContent=0; numContent=0; notecardLine=0;
-		llGetNotecardLine(currentNotecard, numContent);
-		XYtitle(currentNotecard);
-		if(play==1) llSetTimerEvent(optionsTimer);
-		
-	}
-	
-	touch_start(integer total_number)
-	{
-		// check we can do it
-		if(privacy(llDetectedKey(0))==0) return;
-		
-		// do whatever needed
-		string objname=llGetLinkName (llDetectedLinkNumber(0));
-		debug("clicked object : "+objname);
-		
-		
-		
-		if(objname=="UP")
-		{
-			indexContent-=ROWS;
-			if(indexContent<0)indexContent=0;
-			
-			refreshContent();
-			return;
-		}
-		if(objname=="DOWN")
-		{
-			indexContent+=ROWS;
-			if((indexContent+1)>numContent)indexContent=0;
-			
-			refreshContent();
-			return;
-		}
-		if(objname=="PLAY") {
-			if(play==0)
-			{
-				llSetTimerEvent(optionsTimer);
-				play=1;
-				doPlay();
-				info("Slideshow started");
-			}
-			return;
-		}
-		if(objname=="STOP") {
-			if(play==1)
-			{
-				play=0;
-				llSetTimerEvent(0.0);
-				info("Slideshow stopped");
-			}
-			return;
-		}
-		
-		// display menu if not clicked on a cell or up/down
-		doDialog();
-	}
-	timer()
-	{
-		debug("timer started");
-		doPlay();
-	}
-	// instructions must be something like
-	listen(integer channel, string name, key id, string message)
-	{
-		debug("received on channel "+(string)channel+" msg "+message);
-		
-		
-		// privacy checking
-		if(privacy(id)==0) return;
-		
-		if(interpretMenu(id,message)==1) return;
-		
-		
-		
-	}
-	
-	// will fully read the notecard and position properly into content
-	// uses
-	dataserver(key id, string data)
-	{
-		debug("dataserver received data: "+data);
-		
-		if (data != EOF)
-		{
-			
-			// data in: we must display it fully
-			
-			
-			integer i;
-			// how many real rows to display, wrap lines longer than if
-			// wrap option had been selected
-			if(optionsWRAP==1){
-				integer numrows=llStringLength(data)/COLS+1;
-				integer offset=0;
-				for(i=0;i<numrows;i++){
-					string msg=llGetSubString(data,offset,offset+COLS);
-					contents+=msg;
-					offset+=COLS;
-					numContent++;
-				}
-			}
-			else {
-				contents+=data;
-				numContent++;
-			}
-			notecardLine++;
-			
-			
-			// now go fetching next dont do if line > 9
-			llGetNotecardLine(currentNotecard, notecardLine);
-			
-		} else {
-			debug("Finishing Read notecard.");
-			// display it
-			doListen();
-			refreshContent();
-			if(play==1) llSetTimerEvent(optionsTimer);
-		}
-		
-	}
-	
+    // notecard
+    state_entry(){
+        
+        showNotecard();
+        if(play==1) llSetTimerEvent(optionsTimer);
+        
+    }
+    
+    touch_start(integer total_number)
+    {
+        // check we can do it
+        if(privacy(llDetectedKey(0))==0) return;
+        
+        // do whatever needed
+        string objname=llGetLinkName (llDetectedLinkNumber(0));
+        debug("clicked object : "+objname);
+        
+        
+        
+        if(objname=="UP") 
+        {
+            indexContent-=ROWS;
+            if(indexContent<0)indexContent=0;
+            
+            refreshContent();
+            return;
+        }
+        if(objname=="DOWN") 
+        {
+            indexContent+=ROWS;
+            if((indexContent+1)>numContent)indexContent=0;
+            
+            refreshContent();
+            return;
+        }
+        if(objname=="PREV")
+        {
+            indexNotecard-=1;
+            if(indexNotecard<0) indexNotecard=numNotecards;
+            showNotecard();
+            return;
+            
+        }
+        if(objname=="NEXT")
+        {
+            indexNotecard+=1;
+            if(indexNotecard>numNotecards)indexNotecard=0;
+            showNotecard();
+            return;
+        }
+        if(objname=="PLAY") 
+        {
+            if(play==0)
+            {
+               llSetTimerEvent(optionsTimer);
+               play=1;
+               doPlay();
+               info("Slideshow started");
+            }
+            return;
+        }
+        if(objname=="STOP") {
+            if(play==1)
+            {
+               play=0;
+               llSetTimerEvent(0.0);
+               info("Slideshow stopped");
+            }
+            return;
+        }
+        
+        // display menu if not clicked on a cell or up/down
+        doDialog();
+    }
+    timer()
+    {
+        debug("timer started");
+        doPlay();
+    }
+    // instructions must be something like
+    listen(integer channel, string name, key id, string message)
+    {
+        debug("received on channel "+(string)channel+" msg "+message);
+        
+        
+        // privacy checking
+        if(privacy(id)==0) return;
+        
+        if(interpretMenu(id,message)==1) return;
+        
+        
+        
+    }
+    
+    // will fully read the notecard and position properly into content
+    // uses
+    dataserver(key id, string data)
+    {
+        debug("dataserver received data: "+data);
+        
+        if (data != EOF)
+        {
+            
+            // data in: we must display it fully
+            
+            
+            integer i;
+            // how many real rows to display, wrap lines longer than if
+            // wrap option had been selected
+            if(optionsWRAP==1){
+                integer numrows=llStringLength(data)/COLS+1;
+                integer offset=0;
+                for(i=0;i<numrows;i++){
+                    string msg=llGetSubString(data,offset,offset+COLS);
+                    contents+=msg;
+                    offset+=COLS;
+                    numContent++;
+                }
+            }
+            else {
+                contents+=data;
+                numContent++;
+            }
+            notecardLine++;
+            
+            
+            // now go fetching next dont do if line > 9
+            llGetNotecardLine(currentNotecard, notecardLine);
+            
+        } else {
+            debug("Finishing Read notecard.");
+            // display it
+            doListen();
+            refreshContent();
+            if(play==1) llSetTimerEvent(optionsTimer);
+        }
+        
+    }
+    
 }
