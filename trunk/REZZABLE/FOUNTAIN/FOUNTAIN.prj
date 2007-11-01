@@ -1,0 +1,20 @@
+<Project name="FOUNTAIN" guid="6ca698e3-76a4-449b-8a46-a97e261e2f44">
+	<Object name="RSS134" guid="90f92922-2d1d-4f3c-9e14-d5336d5bc736" active="true">
+		<Object name="Bubble" guid="0d24a546-e03b-4e64-a5c2-a80d47dc3bb2">
+			<Script name="Script.lsl" guid="515e48dc-58c8-4405-974f-dee4372837bb">
+			</Script>
+		</Object>
+		<Script name="Db-DESCS-3" guid="3383ee4d-82f3-465a-b866-d4163be107e5">
+		</Script>
+		<Script name="Db-TITLES-2" guid="70f175e1-ed60-4106-b06c-065b34f904a9">
+		</Script>
+		<Script name="Db-URLS-1" guid="f98c08a5-a83f-4299-88e4-c2d81cd56575">
+		</Script>
+		<Notecard name="Notecard.txt" guid="df0769a6-c78d-424a-88bf-c6b486db1fb1">
+		</Notecard>
+		<Script name="Parser-4" guid="6d242d93-1bc1-4f22-bd11-5e99894e2ae0">
+		</Script>
+		<Script name="RSS134" guid="0c126627-d85f-4c4b-a2ce-d4f8d5f925ee">
+		</Script>
+	</Object>
+</Project>
