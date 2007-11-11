@@ -1,0 +1,47 @@
+# BLOG data
+Title=Rezzable Blog # not used now
+
+# change URL to production address
+URL=http://www.salahzar.info/lsl/rezzable.php
+reversed=1
+
+# Appearance
+maxtitles=12# max number of titles to handle
+TitleColor=<1,0,0> # titles in red
+DetailColor=<1,1,1> # detail color in black
+
+
+# obscure configuration
+WrapColumn=30 # when showing content wrap at max num chars
+OmegaAxis=<0,0,5> # how the object rotate
+OmegaSpinRate=1 
+OmegaGain=1
+
+
+# Timers
+IdleTimer=10 # how many secs to wait before auto producing next bubble 0=disabled
+leaseTimer=20 # how many seconds allow for leasing
+refreshTimer=600 # how many secs before refetching all the RSS
+enableLease=0 # if 0 no lease will be handled (maybe easier to use)
+
+# behaviour
+whisperChannel=31415 # which channel use to control the bubbles. Change it to allow multiple objects to cohexists in the same space without interferences
+killBubbles=1 # if bubbles should be killed when lease ends
+rssRows=5 # how many news to display at once
+offsetBubble=<0,0,1> # where to rez the new bubble 
+maxPush=<0.1,0.1,0.1> # object will be randomly pushed maximizing to this value
+objName=BubbleLink#   <== which object to rez from obj inventory
+buoyancy=1.001 # set < 1 to fall down, >1 to float
+listeningChannel=1#which channel listening (might also be 0!!!)
+
+# customize verbs
+moreVerb=MORE
+nextVerb=NEXT
+prevVerb=PREV
+
+# internal usage flags don't need to be touched
+# Debug (0=be quiet, 1= say owner what's happening)
+Debug=0
+NeededMemory=4000 # used to limit amount of memory used in parser increase this to lower the memory used in parser 
+
+
