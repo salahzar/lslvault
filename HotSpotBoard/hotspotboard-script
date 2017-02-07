@@ -277,7 +277,7 @@ state moveLink {
 
     timer() {
         setOff();
-        state default;
+        state run;
     }
 }
 state design {
