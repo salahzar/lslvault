@@ -143,7 +143,7 @@ random(){
         debug("moving card #" + (string)i);
         LINKNUMBER = i;
         setOff();
-        vector randompoint = <0,-0.5 * scale.y,(llFrand(1.0) - 0.5) * scale.z>;
+        vector randompoint = <0.5 * scale.x,0,(llFrand(1.0) - 0.5) * scale.z>;
         debug("going to random point " + (string)randompoint);
         move(randompoint);
     }
