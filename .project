@@ -7,5 +7,6 @@
 	<buildSpec>
 	</buildSpec>
 	<natures>
+		<nature>lslforge.LSLForgeNature</nature>
 	</natures>
 </projectDescription>
