@@ -1,5 +1,3 @@
-// LSL script generated - LSLForge (0.1.6.5): hotspotboard.lslp 
-// 2017-02-05 19:07:01
 /**
 This script is free to be used as you like.
 
@@ -61,7 +59,7 @@ that can be copy and pasted to the notecard for the script to identify all the s
 // Note that when in design mode the board must have rotation 0
 // and should be used on the right side
 
-integer BOARD_CHANNEL = 1001;
+integer BOARD_CHANNEL = 1001; 
 string UI_RESET = "RESET";
 string UI_DESIGN = "DESIGN";
 string UI_HELP = "HELP";
@@ -179,7 +177,7 @@ list shuffle(list input) {
 
 list random_helper(integer n, vector scale, integer random){
 	if(n<1) return [];
-    debug("performing initial positining of labels");
+    debug("performing initial positioning of labels");
     list ret = []; 
     list x = starting_order(n);
     if(random) x = shuffle(x);
@@ -265,7 +263,7 @@ state run {
         }
         key avatar = llDetectedKey(0); 
         if(avatar==llGetOwner()){
-        	llDialog(avatar,"",[ UI_DESIGN, UI_RESET ], 1001);
+        	llDialog(avatar," ",[ UI_DESIGN, UI_RESET ], 1001);
         } else {
         	info(UI_MUST_CLICK_A_LABEL);
         }

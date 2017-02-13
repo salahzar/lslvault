@@ -1,7 +1,5 @@
 // LSL script generated - LSLForge (0.1.6.5): HotSpotBoard.hotspotboard.lslp 
-// 2017-02-09 21:45:47
-// LSL script generated - LSLForge (0.1.6.5): hotspotboard.lslp 
-// 2017-02-05 19:07:01
+// 2017-02-13 01:00:32
 /**
 This script is free to be used as you like.
 
@@ -177,7 +175,7 @@ list shuffle(list input){
 
 list random_helper(integer n,vector scale,integer random){
     if (n < 1) return [];
-    debug("performing initial positining of labels");
+    debug("performing initial positioning of labels");
     list ret = [];
     list x = starting_order(n);
     if (random) x = shuffle(x);
@@ -266,7 +264,7 @@ state run {
         }
         key avatar = llDetectedKey(0);
         if (avatar == llGetOwner()) {
-            llDialog(avatar,"",[UI_DESIGN,UI_RESET],1001);
+            llDialog(avatar," ",[UI_DESIGN,UI_RESET],1001);
         }
         else  {
             info(UI_MUST_CLICK_A_LABEL);
