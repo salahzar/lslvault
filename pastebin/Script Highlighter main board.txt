@@ -1,0 +1,34 @@
+integer status=0;
+vector st1;
+vector st2;
+sendInfo()
+{
+    // inform of my touched pos, pos, rot and scale
+    llMessageLinked(LINK_SET,0,llList2CSV([st1, st2, llGetPos(),llGetRot(),llGetScale()]), NULL_KEY);
+}
+default
+{
+    state_entry()
+    {
+        llSay(0, "Reset");
+        status=0;
+    }
+
+    touch_start(integer total_number)
+    {
+        if(status==0)
+        {
+            st1=llDetectedTouchST(0);
+            llSay(0,"click for 2nd point");
+            status++;
+            return;
+        }
+        st2=llDetectedTouchST(0);
+        
+        //llSay(0,"ORIGINAL ST: "+(string)st);
+        sendInfo();
+        status=0;
+        llSay(0,"Click for next 1st point");
+    }
+    
+}

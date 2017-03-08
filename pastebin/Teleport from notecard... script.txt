@@ -1,0 +1,129 @@
+integer TIMEOUT=15;
+string NOTECARD;
+integer POS;
+key IDNOTE;
+integer INDEX;
+
+key av;
+
+
+list NAMES;
+list REGIONS;
+list ADDRESSES;
+list TEXTURES;
+
+vector COLOR=<1,1,1>;
+
+integer listener;
+
+info(string s){
+       llSetText(s,COLOR,1);
+       llSay(0,s);
+}
+default 
+{
+    changed(integer change){
+        llResetScript();
+    }
+    state_entry(){
+        info("Reading notecard...");
+ 
+        NOTECARD=llGetInventoryName(INVENTORY_NOTECARD,0);
+        POS=0;
+        IDNOTE=llGetNotecardLine(NOTECARD,POS);
+    }
+     dataserver(key id, string data)
+    {
+        integer N=5;
+        if (id == IDNOTE)
+        {
+            if(data==EOF) state ready;
+            if(POS % N == 0) {
+                info("Adding name: "+data);
+                NAMES+=[data];
+            }
+            if(POS % N == 1) {
+                //info("Adding region: "+data);
+                REGIONS+=[data];
+            }
+            if(POS % N == 2) {
+                //info("Adding address: "+data);
+                ADDRESSES+=[data];
+            }
+            if(POS % N == 3) {
+                //info("Adding texture: "+data);
+                TEXTURES+=[data];
+            }
+            if(POS % N == 4) {
+                //info("Skipping separator: "+data);
+                
+            }
+            POS++;
+            //info("reading line "+(string)POS);
+            IDNOTE=llGetNotecardLine(NOTECARD,POS);
+        }
+            
+    }    
+}
+state ready {
+   
+       
+    state_entry(){
+        llSetTexture("Presentation",ALL_SIDES);
+        listener=-1;
+        info("READY with "+(string)(llGetListLength(NAMES))+" destinations");
+        
+    }        
+
+            
+    
+    touch_start(integer n)
+    {
+       
+        av=llDetectedKey(0);
+        state dialog;
+    }
+}
+state dialog {
+    state_entry(){
+        listener=llListen(-1,"",av,"");
+        llSetTimerEvent(TIMEOUT);
+        llDialog(av,"Choose: ",NAMES,-1);
+    }
+    listen(integer channel, string name, key id, string what){
+        llSetTimerEvent(0);
+        INDEX=llListFindList(NAMES,what);
+        state final;
+    }
+    timer(){
+        llSay(0,"removing listener");
+        llSetTimerEvent(0);
+        llListenRemove(listener);
+        listener=-1;
+        state ready;
+    }
+}
+state final {
+    state_entry(){
+        llSetTexture(llList2String(TEXTURES,INDEX),ALL_SIDES);
+        info("Touch for going to "+llList2String(NAMES,INDEX));
+        llSetTimerEvent(TIMEOUT);
+    }
+    touch_start(integer count){
+        key id=llDetectedKey(0);
+        if(id!=av) return;
+        
+llSay(0,"GOING TO "+llList2String(REGIONS,INDEX)+ llList2String(ADDRESSES,INDEX)); 
+            
+        osTeleportAgent(id,llList2String(REGIONS,INDEX),llList2Vector(ADDRESSES,INDEX),<0,0,0>); 
+        llSetTimerEvent(0);
+        listener=-1;
+        state ready;
+    }
+    timer() {
+        llSetTimerEvent(0);
+        llSay(0,"reset");
+        listener=-1;
+        state ready;
+    }
+}

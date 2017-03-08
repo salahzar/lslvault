@@ -1,0 +1,126 @@
+key ownerkey=NULL_KEY;
+integer listener=0;
+float d=0.5;
+integer r=45;
+integer a=5;
+
+vector initial_pos;
+rotation initial_rot;
+
+integer getChannel()
+{
+       return 0x80000000 | (integer)("0x"+(string)ownerkey);
+}
+rotation r2rot(){
+    return llEuler2Rot(<0,0,DEG_TO_RAD*r>);
+}
+
+free()
+{
+    llSetTimerEvent(0);
+   if(ownerkey!=NULL_KEY) llListenRemove(listener);
+   listener=0;
+   ownerkey=NULL_KEY;
+   llSetText(".",<0,1,0>,1);
+   
+}
+busy()
+{
+   show();
+   llSetTimerEvent(60);
+   listener=llListen(getChannel(),"",NULL_KEY,"");
+}
+show(){
+   // string sPos=FormatVector(llGetPos(),0);
+   // string sRot=FormatRotation(llGetRot(),0);
+   // llSay(0,(string)llGetPos());
+   llSetText(osKey2Name(ownerkey),<1,1,0>,1);
+//    llSetText(osKey2Name(ownerkey)+"\n d="+(string)FormatDecimal(d,1)+" a="+(string)r+"\n"+sPos+" "+sRot,<1,1,1>,1);
+}
+
+string FormatDecimal(float number, integer precision)
+{    
+    float roundingValue = llPow(10, -precision)*0.5;
+    float rounded;
+    if (number < 0) rounded = number - roundingValue;
+    else            rounded = number + roundingValue;
+ 
+    if (precision < 1) // Rounding integer value
+    {
+        integer intRounding = (integer)llPow(10, -precision);
+        rounded = (integer)rounded/intRounding*intRounding;
+        precision = -1; // Don't truncate integer value
+    }
+ 
+    string strNumber = (string)rounded;
+    return llGetSubString(strNumber, 0, llSubStringIndex(strNumber, ".") + precision);
+}
+string FormatVector(vector v,integer precision){
+    return "<"+FormatDecimal(v.x,precision)+","+FormatDecimal(v.y,precision)+","+FormatDecimal(v.z,precision)+">";
+}
+string FormatRotation(rotation r,integer precision){
+    vector euler=llRot2Euler(r)/DEG_TO_RAD;
+    return FormatVector(euler,precision);
+}
+
+default
+{
+    state_entry()
+    {
+        initial_pos=llGetPos();
+        initial_rot=llGetRot();
+        llSay(0, "Script running");
+        free();
+    }
+    touch_start(integer count)
+    {
+        if(llDetectedKey(0)==ownerkey)
+        {
+            free();
+            return;
+        }
+        if(ownerkey!=NULL_KEY)
+        {
+            llSay(0,"Sono impegnato con "+osKey2Name(ownerkey));
+            return;
+        }
+        ownerkey=llDetectedKey(0);
+        busy();
+
+    }
+    timer()
+    {
+        free();        
+    }
+    listen(integer channel,string name,key id,string str)
+    {
+        if(str=="Up") llSetPos(llGetPos()+<d,0,0>);
+        if(str=="Down") llSetPos(llGetPos()-<d,0,0>);
+        if(str=="Left") llSetPos(llGetPos()+<0,d,0>);
+        if(str=="Right") llSetPos(llGetPos()-<0,d,0>);
+        
+        if(str=="ZUp") llSetPos(llGetPos()+<0,0,d>);
+        if(str=="ZDown") llSetPos(llGetPos()+<0,0,-d>);
+        
+        if(str=="RotRight") llSetRot(llGetRot()*r2rot());
+        if(str=="RotLeft") llSetRot(llGetRot()/r2rot());
+        
+        if(str=="+1") d=d+0.1;
+                    
+        if(str=="-1") d=d-0.1;
+        if(str=="+a") r=r+5;
+        if(str=="-a") r=r-5;
+        
+        if(str=="Reset"){
+            vector pos=llGetPos();
+            while(llVecDist(pos,initial_pos)>0.1){
+                llSetPos(initial_pos);
+                pos=llGetPos();
+            }
+            llSetRot(initial_rot);
+            llResetScript();
+        }
+        else show();
+        
+    }
+}

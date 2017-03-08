@@ -1,0 +1,104 @@
+///////////////////////////////////////////////////////////////////////////
+//  Copyright (C) Wizardry and Steamworks 2012 - License: GNU GPLv3      //
+//  Please see: http://www.gnu.org/licenses/gpl.html for legal details,  //
+//  rights of fair usage, the disclaimer and warranty conditions.        //
+///////////////////////////////////////////////////////////////////////////
+ 
+//////////////////////////////////////////////////////////
+//                  CONFIGURATION                       //
+//////////////////////////////////////////////////////////
+ 
+// Specifies the radius of the circle in which the NPC
+// will travel in.
+float MOVEMENT_RANGE = 5.0;
+// How often to check that the NPC has reached a 
+// waypoint.
+float POLL_TIME = 1;
+// Set this to the name of the animation for the walk
+// equence. This animation has to be placed in the
+// same primitive as this script.
+string ANIMATION_WALK="Walk";
+// Set this to the name of the animation for the stand
+// sequence. This animation has to be placed in the 
+// same primitive as this script.
+string ANIMATION_STAND="Stand";
+// How much time, in seconds, does a standing animation 
+// cycle take? 
+float STANDING_ANIMATION_CYCLE_TIME = 20;
+// How many cycles to wait, randomly?
+integer STANDING_ANIMATION_CYCLES = 3;
+ 
+///////////////////////////////////////////////////////////////////////////
+//                              INTERNALS                                //
+///////////////////////////////////////////////////////////////////////////
+ 
+vector wasCirclePoint(float radius) {
+    float x = llPow(-1, 1 + (integer) llFrand(2)) * llFrand(radius*2);
+    float y = llPow(-1, 1 + (integer) llFrand(2)) * llFrand(radius*2);
+    if(llPow(x,2) + llPow(y,2) <= llPow(radius,2))
+        return <x, y, 0>;
+    return wasCirclePoint(radius);
+}
+ 
+// Vector that will be filled by the script with
+// the initial starting position in region coordinates.
+vector iPos = ZERO_VECTOR;
+// Storage for destination position.
+vector dPos = ZERO_VECTOR;
+// Key of the NPC
+key npcKey = NULL_KEY; 
+ 
+default {
+    state_entry() {
+        llSetStatus(STATUS_PHANTOM, TRUE);
+        osNpcRemove(llGetObjectDesc());
+        iPos = llGetPos();
+        osAgentSaveAppearance(llGetOwner(), "appearance");
+        npcKey = osNpcCreate("Alter", "Ego", iPos, "appearance");
+        llSetObjectDesc(npcKey);
+        // It seems that 1 second is a magic wait-time that must 
+        // separate the osNpcCreate from other commands or else 
+        // the NPC rezzes as a cloud.
+        llSetTimerEvent(1);
+    }
+    timer() {
+        llSetTimerEvent(0);
+        llSay(0,"load appearance");
+        osNpcLoadAppearance(npcKey, "appearance");
+        state wander;
+    }
+}
+ 
+state wander
+{
+    state_entry() {
+        llSay(0,"wandering");
+        dPos = iPos + wasCirclePoint(MOVEMENT_RANGE);
+        osNpcPlayAnimation(npcKey, ANIMATION_WALK);
+        osNpcMoveToTarget(npcKey, dPos, OS_NPC_NO_FLY);
+        llSetTimerEvent(POLL_TIME);
+    }
+ 
+    timer() {
+        // Another magic value (2), it seems that even on flat ground
+    // the NPC never really reaches the destination position.
+    // Instead, it reaches some point that is always (experimentally)
+    // smaller than 2 meters. Hence the comparison.
+        if (llVecDist(osNpcGetPos(npcKey), dPos) > 2) return; 
+        osNpcStopAnimation(npcKey, ANIMATION_WALK);
+        osNpcPlayAnimation(npcKey, ANIMATION_STAND);
+        llSetTimerEvent(0);
+        state wait;
+    }
+}
+ 
+state wait {
+    state_entry() {
+        llSetTimerEvent(STANDING_ANIMATION_CYCLE_TIME * 1+llFrand(STANDING_ANIMATION_CYCLES-1));
+    }
+    timer() {
+        llSetTimerEvent(0);
+        osNpcStopAnimation(npcKey, ANIMATION_STAND);
+        state wander;
+    }
+}

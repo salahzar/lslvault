@@ -1,0 +1,144 @@
+/*
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+Originally written by Salahzar Stenvaag for OpenSim, on March 2016
+See http://pastebin.com/Z4m9J5Se for related google app application
+*/
+
+string URL = "http://edmondo-1252.appspot.com/?";
+string SESSION = "1";
+//////////////////////////////////////////////
+key handle;
+
+//////////////////////////////////////////////
+integer SLEEP = 5;
+integer TIMER = 10;
+
+debug(string s) {
+    // uncomment next line to have some debug
+    //llOwnerSay("DEBUG:"+s); 
+}
+
+/***********************************************************
+ * Show the string in parameter line on row numbered row
+ ***********************************************************/
+show(integer row, string line) {
+    llMessageLinked(LINK_SET,(row+1)*1000,line,NULL_KEY);
+}
+
+/***********************************************************
+ * Clear the whiteboard
+ ***********************************************************/
+clear() {
+    debug("clearing");
+    integer i;
+    for(i=0;i<20;i++) {
+        show(i,"");
+    }
+}
+/***********************************************************
+ * Ask server to display list for session
+ ***********************************************************/
+httprequest() {
+    debug("httprequest");
+    string url = URL + "type=list&session="+SESSION;
+    list parm = [ HTTP_MIMETYPE, "text/plain; charset=UTF-8",
+            HTTP_BODY_MAXLENGTH, 32000 ];
+    string body = ""; 
+    handle = llHTTPRequest(url, parm, body);
+}
+
+string SPACES = "                           ";
+string POINTS = "...........................";
+/***********************************************************
+ * Formatting a string in a field with max len columns,
+ * formatType can be "L" for left formatting, "R" for right
+ * You can use previous SPACES or POINTS constants to specify
+ * characters to be used for padding
+ ***********************************************************/
+string format(string str,integer len,string formatType,string padding) {
+    integer strlen = llStringLength(str);
+    if(strlen>=len) return llGetSubString(str,0,len-1);
+    if(formatType == "L") {
+        return str + llGetSubString(padding, 0,len - strlen - 1);
+    } else {
+        return  llGetSubString(padding, 0,len - strlen - 1) + str;
+    }
+    
+}
+
+// not used unless you want to enable a toggling mechanism when touch
+integer toggle = 0;
+
+default
+{
+    state_entry() {
+        /* Use this if you want to get SESSION from the object description 
+        SESSION = llGetObjectDesc();
+        list parsing = llParseStringKeepNulls(SESSION,[":"],[]);
+        SESSION = llStringTrim(llList2String(parsing,1),STRING_TRIM); */
+        //llSay(0,"Setting SESSION: "+SESSION);
+        
+        clear();
+        
+        // if NOT TOGGLE be sure not to have any text
+        llSetText("",<1,1,1>,1);
+        //TOGGLE llSetText("Off",<1,1,1>,1);
+        
+    }
+    
+    touch_start(integer count) {
+        /* TOGGLE HANDLING
+        toggle = 1 - toggle;
+        if( toggle == 0 ) {
+            clear();
+            llSetText("Off",<1,1,1>,1);
+            llSetTimerEvent(0);
+        } else {
+            llSetTimerEvent(0.1);
+            llSetText(" ",<1,1,1>,1);
+            
+        } */
+        // if not toggle touch is producing a refresh
+        httprequest();
+        
+    }
+    /* TOGGLE
+    timer() {
+        httprequest();
+        llSetTimerEvent(TIMER);
+    } */
+    
+    // evaluate response from server
+    http_response(key k, integer status, list meta, string body) {
+        // be sure to answer to only our request
+        if(k != handle) return;
+        
+        debug("status: "+(string)status);
+        debug("body: "+body);
+        clear();
+        
+        // parse result in various lines separated by CR
+        list lines = llParseStringKeepNulls(body,["\n"],[]);
+        integer i;
+        for(i=0;i<llGetListLength(lines);i++){
+            
+            // for each line parse it separating with ","
+            string line = llList2String(lines,i);
+            debug("Line: "+line);
+            list array = llParseStringKeepNulls(line,[","],[]);
+            
+            // amd get name and score
+            string name = llList2String(array,0);
+            string score = llList2String(array,1);
+            
+            // show them on the board
+            show(i,format(score,4,"R",SPACES) + " " + format(name,30,"L",SPACES));
+        }
+    }
+}

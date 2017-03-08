@@ -1,0 +1,106 @@
+key operator;
+
+list gAnimations ;
+
+
+
+restartAnimations()
+{
+    integer i ;
+    integer max = llGetListLength(gAnimations) ;
+    string ani ;
+    for (i=0;i<max;i++)
+    {
+        ani = llList2String(gAnimations, i) ;
+        llStopAnimation(ani) ;
+        llStartAnimation(ani) ;
+    }
+}
+
+addAnimation(string ani)
+{
+    //ensure that the animation isn't already in the list
+    if(-1 == llListFindList(gAnimations, [ani]))
+    {
+        //llOwnerSay("Add animation "+ani);
+        gAnimations = gAnimations + [ani] ;
+        llSetTimerEvent(0.5) ;
+    }
+}
+removeAnimation(string ani)
+{
+    integer idx = llListFindList(gAnimations, [ani]) ;
+    
+    if(-1 != idx)
+    {
+        //llOwnerSay("Remove animation "+ani);
+        gAnimations = llDeleteSubList(gAnimations, idx,idx);
+    }
+    if(0==llGetListLength(gAnimations))
+    {
+        llSetTimerEvent(0) ;
+    }
+}
+
+default
+{
+    
+    listen(integer channel, string name, key id, string str)
+    {
+//        llOwnerSay("Received "+str);
+        list cmds=llParseStringKeepNulls(str,[" "],[]);
+        string cmd=llList2String(cmds,0);
+        //integer index=(integer)llList2String(cmds,1);
+        //string parm=llList2String(nomi,index);
+        string parm=llList2String(cmds,1);
+        if(cmd=="add") addAnimation(parm) ;
+        if(cmd=="del") removeAnimation(parm);
+    }
+    
+    timer()
+    {
+        restartAnimations() ;
+    }
+    touch_start(integer count)
+    {
+        integer linkno=llDetectedLinkNumber(0);
+        string name=llGetLinkName(linkno);
+        integer idx = llListFindList(gAnimations, [name]) ;
+        if(idx<0) { 
+            addAnimation(name); 
+            llSetLinkPrimitiveParams(linkno,[ PRIM_COLOR, ALL_SIDES,<0,1,0>,0.5 ]);
+        } else {
+            removeAnimation(name);
+                  llSetLinkPrimitiveParams(linkno,[ PRIM_COLOR, ALL_SIDES,<0,0,0>,0 ]);
+        }
+        
+    }
+    
+    changed(integer change)
+    {
+        if(change & CHANGED_OWNER)
+        {
+            llResetScript() ;
+        }
+    }
+    on_rez(integer rez)
+    {
+        llResetScript();
+    }
+
+    state_entry()
+    {
+    
+        llListen(200,"",llGetOwner(),"");
+    
+        if (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION))
+        {
+            llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
+        } 
+        if(0>llGetListLength(gAnimations))
+        {
+            llSetTimerEvent(0.5) ;
+        } 
+        llOwnerSay("Ready");
+    } 
+}

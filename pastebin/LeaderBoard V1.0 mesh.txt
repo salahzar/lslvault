@@ -1,0 +1,80 @@
+key handle;
+string URL = "http://edmondo-1252.appspot.com/?";
+string SESSION = "42061b74-9603-4e7a-af22-c4a868410dc0";
+
+debug(string s) {
+   // llOwnerSay("DEBUG:"+s);
+}
+
+show(integer row, string line) {
+    llMessageLinked(LINK_SET,(row+1)*1000,line,NULL_KEY);
+}
+
+clear() {
+    debug("clearing");
+    integer i;
+    for(i=0;i<20;i++) {
+        show(i,"");
+    }
+}
+
+httprequest(string cmd) {
+    //show(9,"     (refreshing...)   ");
+    debug("httprequest");
+    string url = URL + "type=" + cmd + "&session="+SESSION;
+    debug("url="+url);
+    list parm = [ HTTP_MIMETYPE, "text/plain; charset=UTF-8",
+        HTTP_BODY_MAXLENGTH, 32000 ];
+    string body = "";
+    handle = llHTTPRequest(url, parm, body);
+}
+
+string SPACES = "                           ";
+string POINTS = "...........................";
+string format(string str,integer len,string formatType,string padding) {
+    integer strlen = llStringLength(str);
+    if(strlen>=len) return llGetSubString(str,0,len-1);
+    if(formatType == "L") {
+        return str + llGetSubString(padding, 0,len - strlen - 1);
+    } else {
+            return  llGetSubString(padding, 0,len - strlen - 1) + str;
+    }
+
+}
+
+default
+{
+    state_entry() {
+        clear();
+         httprequest("list");
+        llListen(1,"",llGetOwner(),"");
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if(message=="cleardb"){
+            httprequest("clear");
+        }
+    }
+
+    touch_start(integer count) {
+        show(9,"(refresh)");
+        httprequest("list");
+        llSleep(2);
+    }
+    
+    http_response(key k, integer status, list meta, string body) {
+        debug("status: "+(string)status);
+        debug("body: "+body);
+        clear();
+        list lines = llParseStringKeepNulls(body,["\n"],[]);
+        integer i;
+        for(i=0;i<(llGetListLength(lines)-1);i++){
+            string line = llList2String(lines,i);
+            debug("Line: "+line);
+            list array = llParseStringKeepNulls(line,[","],[]);
+            string name = llList2String(array,0);
+            string score = llList2String(array,1);
+            show(i,format(score,4,"R",SPACES) + " " + format(name,30,"L",SPACES));
+        }
+    }
+}

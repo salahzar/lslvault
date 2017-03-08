@@ -1,0 +1,24 @@
+key ownerkey=NULL_KEY;
+
+integer getChannel()
+{
+    return 0x80000000 | (integer)("0x"+(string)ownerkey);
+}
+
+
+default
+{
+    state_entry()
+    {
+        llSay(0, "Script running");
+        
+    }
+    touch_start(integer count)
+    {
+        ownerkey=llDetectedKey(0);
+        integer num=llDetectedLinkNumber(0);
+        string name=llGetLinkName(num);
+        llShout(getChannel(),name);
+        
+    }
+}
