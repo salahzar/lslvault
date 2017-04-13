@@ -58,6 +58,8 @@ that can be copy and pasted to the notecard for the script to identify all the s
 // Salahzar Stenvaag February 2017
 // Note that when in design mode the board must have rotation 0
 // and should be used on the right side
+
+
 integer IDLE_TIMEOUT_SECONDS = 600;
 string UI_DIALOG_TEXT = "prepositions";
 integer BOARD_CHANNEL = 5; 
