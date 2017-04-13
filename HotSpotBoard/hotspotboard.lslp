@@ -250,7 +250,7 @@ state run {
 
     state_entry() {
         info(UI_CLICK_A_LABEL);
-        llListen(CHANNEL_BOARD,"",NULL_KEY,"");
+        llListen(BOARD_CHANNEL,"",NULL_KEY,"");
         llSetTimerEvent(IDLE_TIMEOUT_SECONDS);
     }
     
