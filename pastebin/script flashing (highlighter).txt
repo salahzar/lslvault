@@ -1,0 +1,19 @@
+integer st=0;
+default
+{
+    state_entry()
+    {
+        llSetTimerEvent(1);
+    }
+    
+    timer()
+    {
+        if(st==0)
+        
+            llSetAlpha(0.1,ALL_SIDES);
+        else
+            llSetAlpha(0.5,ALL_SIDES);
+        st=1-st;
+    }
+
+}

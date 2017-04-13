@@ -1,0 +1,43 @@
+vector x1=ZERO_VECTOR;
+rotation r1=ZERO_ROTATION;
+vector s1=ZERO_VECTOR;
+vector f=ZERO_VECTOR;
+vector st1=ZERO_VECTOR;
+vector st2=ZERO_VECTOR;
+vector s2=ZERO_VECTOR;
+
+
+default
+{
+   
+
+
+    link_message(integer sender, integer channel, string str, key id)
+    {
+        list recvd=llCSV2List(str);
+
+        st1=(vector)llList2String(recvd,0);
+        st2=(vector)llList2String(recvd,1);
+        x1=(vector)llList2String(recvd,2);
+        r1=(rotation)llList2String(recvd,3);
+        s1=(vector)llList2String(recvd,4);
+        
+        s2.x=(st2.x-st1.x)*s1.x;
+        s2.y=0.1;
+        s2.z=(st1.y-st2.y)*s1.z;
+        //llSay(0,(string)s2);
+        
+        vector x2=llGetPos();
+        x2.x=-s1.x/2+s1.x*(1-st1.x)-s2.x/2;
+        x2.y=0;
+        x2.z=-s1.z/2+s1.z*(st1.y)-s2.z/2;
+        
+        llSetScale(s2);
+        llSetPos(x2);
+        //llSay(0,"set pos to "+(string)x2);
+        
+        f=x1-s1/2;
+        
+        //llSay(0,"Received st1:"+(string)st1+" st2: "+(string)st2+" r1:"+(string)r1+" s1:"+(string)s1);
+    }
+}

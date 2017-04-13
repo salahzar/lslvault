@@ -1,0 +1,215 @@
+////////////////////////////////////////////
+// SALTEXT Novembre 2012
+//
+// Inspired by Xylor Baysklef, Kermitt Quirk
+// 
+//
+////////////////////////////////////////////
+
+debug(string x) {} // llOwnerSay("debug: "+x); }
+_debug(string x) { llMessageLinked(LINK_SET,-2,llGetTimestamp()+" "+llGetScriptName()+":"+x,NULL_KEY); }
+//#define debug(x) // llOwnerSay(x)
+
+integer NCELLS=6;
+/////////////// CONSTANTS ///////////////////
+
+
+// number of characters for each "line" in texture
+integer knum=10;            
+integer start=0;                      
+     
+
+// adjusting offset + multipliers for columns and rows
+vector kcol=<-0.44,0.10,0>; // offset + multiplier for cols
+vector krow=<0.422,-0.05,0>; // offset + multiplier for rows
+vector kmul=<0.07,0.05,0>;
+
+
+list decode =
+           [ "%C3%87", "%C3%BC", "%C3%A9", "%C3%A2", "%C3%A4", "%C3%A0", "%C3%A5", "%C3%A7", "%C3%AA", "%C3%AB",
+             //           è         ï          î         ì         Ä         Å         É         æ         Æ    BLACK RIGHT-POINTING TRIANGLE
+                       "%C3%A8", "%C3%AF", "%C3%AE", "%C3%AC", "%C3%84", "%C3%85", "%C3%89", "%C3%A6", "%C3%AE", "%E2%96%B6",
+             //           ö         ò          û         ù         ÿ         Ö         Ü         ¢         £         ¥
+                       "%C3%B6", "%C3%B2", "%C3%BB", "%C3%B9", "%C3%BF", "%C3%96", "%C3%9C", "%C2%A2", "%C2%A3", "%C2%A5",
+             //           A^    copyright     á         í         ó         ú         ñ         Ñ         ª          º"
+                       "%C3%82", "%C2%A9", "%C3%A1", "%C3%AD", "%C3%B3", "%C3%BA", "%C3%B1", "%C3%91", "%C2%AA", "%C2%BA",
+             //            ¿        O^         ¬        ½         ¼          ¡         «        »       alfa          ß"
+                       "%C2%BF", "%C3%94", "%C2%AC", "%C2%BD", "%C2%BC", "%C2%A1", "%C2%AB", "%C2%BB", "%CE%B1", "%C3%9F",
+             //           gamma      pi      bigsigma  smsigma    mu  
+                       "%CE%93", "%CF%80", "%CE%A3", "%CF%83", "%C2%B5",
+                      
+             //                              tau       BIGfi      theta       omega   delta  
+             "%CF%84", "%CE%A6", "%CE%98", "%CE%A9", "%CE%B4",
+             //         Uu          uu       EPS         INTERS        3bars        +-         <=           >=        INTEGRUP   INTEGRDOWN
+                       "%C5%AC", "%C5%AD", "%CE%B5", "%E2%88%A9", "%E2%89%A1", "%C2%B1", "%E2%89%A5", "%E2%89%A4", "%E2%8C%A0", "%E2%8C%A1",
+             //           A/       A\        a~         A~       E^         I/        O/        o~       O~        o^
+                       "%C3%81", "%C3%80", "%C3%A3", "%C3%83", "%C3%8A", "%C3%8D", "%C3%93", "%C3%B5", "%C3%95", "%C3%B4" ];
+
+
+///////////// END CONSTANTS ////////////////
+
+///////////// GLOBAL VARIABLES ///////////////
+// This is the key of the font we are displaying.
+key     gFontTexture        = "font";
+// All displayable characters.  Default to ASCII order.
+string gCharIndex;
+// This is the channel to listen on while acting
+// as a cell in a larger display.
+integer gCellChannel        = -1;
+// This is the starting character position in the cell channel message
+// to render.
+integer gCellCharPosition   = 0;
+// This is whether or not to use the fade in/out special effect.
+integer gCellUseFading      = FALSE;
+// This is how long to display the text before fading out (if using
+// fading special effect).
+// Note: < 0  means don't fade out.
+float   gCellHoldDelay      = 1.0;
+/////////// END GLOBAL VARIABLES ////////////
+
+ResetCharIndex() { 
+
+     gCharIndex  = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`";
+     gCharIndex += "abcdefghijklmnopqrstuvwxyz{|}~\n\n\n\n\n";
+
+     //decode=[];
+     
+}
+
+vector GetGridOffset(integer index) {
+   // Calculate the offset needed to display this character.
+   integer Row = index / knum - 1;
+   integer Col = index % knum;
+
+   // Return the offset in the texture.
+   return < kcol.x + kcol.y * Col, krow.x + krow.y * Row, 0.0>;
+} 
+ShowChars(integer linknum, vector grid_offset1, vector grid_offset2, vector grid_offset3, vector grid_offset4, vector grid_offset5, vector grid_offset6, vector grid_offset7, vector grid_offset8) {
+   // Set the primitive textures directly.
+   
+   llSetLinkPrimitiveParamsFast( linknum, [
+        PRIM_TEXTURE, 0, (string)gFontTexture, kmul, grid_offset1, 0.0,
+        PRIM_TEXTURE, 1, (string)gFontTexture, kmul, grid_offset2, 0.0,
+        PRIM_TEXTURE, 2, (string)gFontTexture, kmul, grid_offset3, 0.0,
+        PRIM_TEXTURE, 3, (string)gFontTexture, kmul, grid_offset4, 0.0,
+        PRIM_TEXTURE, 4, (string)gFontTexture, kmul, grid_offset5, 0.0,
+        PRIM_TEXTURE, 5, (string)gFontTexture, kmul, grid_offset6, 0.0,
+        PRIM_TEXTURE, 6, (string)gFontTexture, kmul, grid_offset7, 0.0,
+        PRIM_TEXTURE, 7, (string)gFontTexture, kmul, grid_offset8, 0.0
+        ]);
+}
+
+// SALAHZAR intelligent procedure to extract UTF-8 codes and convert to index in our "cp850"-like table
+integer GetIndex(string char)
+{
+    integer  ret=llSubStringIndex(gCharIndex, char);
+   // llSay(0,"pos: "+(string)ret);
+    if(ret>=0) return ret;
+ 
+    // special char do nice trick :)
+    string escaped=llEscapeURL(char);
+   // llSay(0,"char: "+escaped+" "+llList2CSV(decode));
+    integer found=llListFindList(decode, [escaped]);
+ 
+    // Return blank if not found
+    if(found<0) return 0;
+ 
+    // return correct index
+  //  llSay(0,"returning "+(string)(100+found));
+    return 100+found;
+ 
+}
+// END SALAHZAR
+ 
+ 
+RenderString(integer linknum, string str) { 
+    debug("telling link "+(string)linknum+" str {"+str+"}");
+   // Get the grid positions for each pair of characters. 
+   vector GridOffset1 = GetGridOffset( GetIndex(llGetSubString(str, 0, 0)) ); // SALAHZAR intermediate function
+   vector GridOffset2 = GetGridOffset( GetIndex(llGetSubString(str, 1, 1)) ); // SALAHZAR
+   vector GridOffset3 = GetGridOffset( GetIndex(llGetSubString(str, 2, 2)) ); // SALAHZAR
+   vector GridOffset4 = GetGridOffset( GetIndex(llGetSubString(str, 3, 3)) ); // SALAHZAR
+   vector GridOffset5 = GetGridOffset( GetIndex(llGetSubString(str, 4, 4)) ); // SALAHZAR
+   vector GridOffset6 = GetGridOffset( GetIndex(llGetSubString(str, 5, 5)) ); // SALAHZAR
+   vector GridOffset7 = GetGridOffset( GetIndex(llGetSubString(str, 6, 6)) ); // SALAHZAR
+   vector GridOffset8 = GetGridOffset( GetIndex(llGetSubString(str, 7, 7)) ); // SALAHZAR
+     
+ 
+   // Use these grid positions to display the correct textures/offsets. 
+    llSetLinkPrimitiveParamsFast( linknum, [
+        PRIM_TEXTURE, 0, (string)gFontTexture, kmul, GridOffset1, 0.0,
+        PRIM_TEXTURE, 1, (string)gFontTexture, kmul, GridOffset2, 0.0,
+        PRIM_TEXTURE, 2, (string)gFontTexture, kmul, GridOffset3, 0.0,
+        PRIM_TEXTURE, 3, (string)gFontTexture, kmul, GridOffset4, 0.0,
+        PRIM_TEXTURE, 4, (string)gFontTexture, kmul, GridOffset5, 0.0,
+        PRIM_TEXTURE, 5, (string)gFontTexture, kmul, GridOffset6, 0.0,
+        PRIM_TEXTURE, 6, (string)gFontTexture, kmul, GridOffset7, 0.0,
+        PRIM_TEXTURE, 7, (string)gFontTexture, kmul, GridOffset8, 0.0
+        ]);
+  // ShowChars(linknum, GridOffset1, GridOffset2, GridOffset3, GridOffset4, GridOffset5, GridOffset6, GridOffset7, GridOffset8); 
+} 
+
+
+
+
+parseMessage(string m, integer row)
+{
+    debug("Parsing message {"+m+"} to row: "+(string)row);
+      
+      integer i; integer j; 
+      
+      
+           for(j=0;j<g_length;j++)
+           {
+               string element=llGetSubString(m,j*8,(j+1)*8-1);
+               integer found=llListFindList(g_lookup,[ (string)(row+j) ]);
+                if(found>=0){
+                 integer linknumber=llList2Integer(g_lookup,found+1);
+            
+               RenderString(linknumber,element);
+            }
+           }
+      // for(i=start;i<llGetNumberOfPrims();i++) RenderString(i+1,"    ");
+}
+
+string g_name;
+integer g_start;
+integer g_end;
+integer  g_length;
+
+list g_lookup; // pairs name + linknumber
+
+
+default {
+   state_entry() {
+       debug("Initialize "+llGetScriptName());
+       // Initialize the character index.
+       list bits=llParseStringKeepNulls(llGetScriptName(),["-"],[]);
+        g_name=llList2String(bits,0);
+        g_start=(integer)llList2String(bits,1);
+        g_end=(integer)llList2String(bits,2);
+        
+        g_length=(integer)llList2String(bits,3);
+       debug("Start: "+(string)g_start+", End: "+(string)g_end+", length: "+(string)g_length);
+       ResetCharIndex();
+       integer i; g_lookup=[];
+       for(i=1;i<=llGetNumberOfPrims();i++)
+       {
+           string pname=llGetLinkName(i);
+           integer iname=(integer)pname;
+           if(iname>=g_start && iname<=g_end)
+           {
+               debug("adding {"+pname+"} link: "+(string)i);
+               g_lookup+=[ pname, i ];
+           }
+       }
+       debug("parsing");
+       integer r; for(r=1000;r<30000;r+=1000)
+       parseMessage(llGetScriptName()+ " {ABCDEFGHIJKLMNOPQRSTUVWXYZàèìòù}",r);
+    } 
+    link_message(integer sender,integer channel,string str,key id)
+    {
+        if(channel>= g_start && channel <=g_end ) parseMessage(str,channel);
+    }
+  
+}

@@ -1,0 +1,42 @@
+
+string URL = "http://edmondo-1252.appspot.com/?";
+string SESSION =  "42061b74-9603-4e7a-af22-c4a868410dc0";
+
+key handle;
+debug(string s) {
+   // llOwnerSay("DEBUG:"+s);
+}
+
+
+httprequest(string avatar, string score) {
+   
+    debug("httprequest");
+    avatar = llEscapeURL(avatar);
+    score = llEscapeURL(score);
+    string url = URL + "type=add&session="+SESSION+"&name="+avatar+"&score="+score;
+    debug("url: "+url);
+    list parm = [ HTTP_MIMETYPE, "text/plain; charset=UTF-8",
+            HTTP_BODY_MAXLENGTH, 32000 ];
+            
+    string body = ""; 
+    handle = llHTTPRequest(url, parm, body);
+}
+
+default
+{
+    state_entry()
+    {
+        llSetText("Adding 1 point\ntouch",<1,1,1>,1);
+       
+    }
+    touch_start(integer count) {
+        key k = llDetectedKey(0);
+        string name = llKey2Name(k);
+        httprequest(name,"1");
+    }
+     http_response(key k, integer status, list meta, string body) {
+        debug("status: "+(string)status);
+        debug("body: "+body);
+        
+    }
+}

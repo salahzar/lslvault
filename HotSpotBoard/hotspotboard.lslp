@@ -53,8 +53,14 @@ with the following:
 that can be copy and pasted to the notecard for the script to identify all the spot areas.
 
 **/
-integer IDLE_TIMEOUT_SECONDS = 600;
 
+
+// Salahzar Stenvaag February 2017
+// Note that when in design mode the board must have rotation 0
+// and should be used on the right side
+integer IDLE_TIMEOUT_SECONDS = 600;
+string UI_DIALOG_TEXT = "prepositions";
+integer BOARD_CHANNEL = 5; 
 string UI_RESET = "RESET";
 string UI_DESIGN = "DESIGN";
 
@@ -100,9 +106,7 @@ vector OFFSET;
 unlisten(){
     if (LISTENER != -1) llListenRemove(LISTENER);
 }
-info(string s){
-    infos(s,[]);
-}
+info(string s) { infos(s,[]); }
 infos(string s,list args){
     llSay(0,format(s,args));
 }
@@ -127,12 +131,12 @@ string find_hot_spot(vector st){
     debug("not found");
     return "";
 }
-string format(string text,list args){
+string format(string text, list args)
+{
     integer len = llGetListLength(args);
     if (len == 0) {
         return text;
-    }
-    else  {
+	} else {
         string ret = text;
         integer i;
         for (i = 0; i < len; i++) {
@@ -140,8 +144,7 @@ string format(string text,list args){
             if (pos != -1) {
                 ret = llDeleteSubString(ret,pos,pos + llStringLength("{" + (string)i + "}") - 1);
                 ret = llInsertString(ret,pos,llList2String(args,i));
-            }
-            else  {
+			} else {
                 return "error";
             }
         }
@@ -172,12 +175,11 @@ list shuffle(list input){
 
 list random_helper(integer n,vector scale,integer random){
     if (n < 1) return [];
-    debug("performing initial positining of labels");
+    debug("performing initial positioning of labels");
     list ret = [];
     list x = starting_order(n);
     if (random) x = shuffle(x);
-    integer i;
-    float delta = scale.z / n;
+    integer i; float delta = scale.z / n;
     for (i = 0; i < n; i++) {
         float height = delta * i + delta / 2 - scale.z / 2;
         vector point = <0,-0.5 * scale.y,height>;
@@ -202,7 +204,8 @@ offTimer(){
 }
 
 string fixed(float input,integer precision){
-    if ((precision = (precision - 7) - (precision < 1)) & -2147483648) return llGetSubString((string)input,0,precision);
+    if ((precision = (precision - 7) - (precision < 1)) & 0xFFFFFFFF80000000) 
+    	return llGetSubString((string)input,0,precision);
     return (string)input;
 }
 string fixedvector(vector v,integer precision){
@@ -247,7 +250,7 @@ state run {
 
     state_entry() {
         info(UI_CLICK_A_LABEL);
-        llListen(5,"",NULL_KEY,"");
+        llListen(CHANNEL_BOARD,"",NULL_KEY,"");
         llSetTimerEvent(IDLE_TIMEOUT_SECONDS);
     }
     
@@ -267,7 +270,7 @@ state run {
         }
         key avatar = llDetectedKey(0);
         if (avatar == llGetOwner()) {
-            llDialog(avatar,"prepositions",[UI_DESIGN,UI_RESET],1001);
+            llDialog(avatar,UI_DIALOG_TEXT,[UI_DESIGN,UI_RESET],1001);
         }
         else  {
             info(UI_MUST_CLICK_A_LABEL);

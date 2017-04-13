@@ -1,0 +1,108 @@
+// The code below is made for use with
+// SCRATCH FOR SECOND LIFE (S4SL)
+// alpha release July 14, 2008
+//
+// by Eric Rosenbaum (ericr@media.mit.edu)
+// MIT Media Lab 
+// Lifelong Kindergarten group
+//
+// S4SL is available for free from
+// http://web.mit.edu/~eric_r/Public/S4SL/
+//
+// S4SL is a modified version of Scratch, 
+// a graphical programming language for kids
+// see scratch.mit.edu
+// Modified by Salahzar for OpenSim
+
+integer myID;
+
+vector hueToRGB(float h)
+{
+    integer i;
+    float f;
+    float p;
+    float q;
+    float t;
+    float r;
+    float g;
+    float b;
+    float s = 1;
+    float v = 1;
+    h *= 5;            // sector 0 to 5
+    i = llFloor(h);
+    f = h - i;            // factorial part of h
+    p = v * ( 1 - s );
+    q = v * ( 1 - s * f );
+    t = v * ( 1 - s * ( 1 - f ) );
+
+    if (i == 0) {
+            r = v;
+            g = t;
+            b = p;
+    } else if (i == 1) {
+            r = q;
+            g = v;
+            b = p;
+     } else if (i == 2) {
+            r = p;
+            g = v;
+            b = t;
+    } else if (i == 3) {
+            r = p;
+            g = q;
+            b = v;
+    } else if (i == 4) {
+            r = t;
+            g = p;
+            b = v;
+    } else {
+            r = v;
+            g = p;
+            b = q;
+    }
+    return <r,g,b>;
+}
+setColor(float color)
+{
+      llSetColor(hueToRGB(color / 100), ALL_SIDES);
+}
+startListening() {
+    llListen(1, "", "", "");
+}     
+default 
+{
+    state_entry()
+    {
+    }
+    on_rez(integer start_param)
+    {
+        myID = start_param;
+        startListening();
+    }
+    listen(integer channel, string name, key id, string msg) 
+    {
+        if (msg == "clear") {
+            llDie();
+        }
+        integer indexOfColon = llSubStringIndex(msg, ":");
+        integer IDreceived = (integer)llGetSubString(msg, 0, indexOfColon-1);
+        if (IDreceived == myID)
+        {
+            msg = llGetSubString(msg,indexOfColon+1, -1);
+            indexOfColon = llSubStringIndex(msg, ":");
+            string command = llToLower(llGetSubString(msg,0,indexOfColon-1));
+            if(command == "set length")
+            {
+                indexOfColon = llSubStringIndex(msg, ":");
+                float length = (float)llGetSubString(msg,indexOfColon+1,-1);
+                llSetScale(<length,.1,.1>);
+            }
+            if(command == "set color")
+            {
+                indexOfColon = llSubStringIndex(msg, ":");
+                float color = (float)llGetSubString(msg,indexOfColon+1,-1);
+                setColor(color);
+            }
+        } 
+    }
+}
