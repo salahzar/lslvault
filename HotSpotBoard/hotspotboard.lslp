@@ -1,9 +1,8 @@
-// LSL script generated - LSLForge (0.1.6.5): hotspotboard.lslp 
-// 2017-02-05 19:07:01
 /**
 This script is free to be used as you like.
 
 Salahzar Stenvaag February 2017
+Modified          April 2017 Timeout
 
 This script is the BOARD part of the hotspot design workflow
 it starts in RUNTIME mode reading a notecard with hotspots, but
@@ -53,18 +52,11 @@ with the following:
 <name>|<tlx,tly,brx,bry>
 that can be copy and pasted to the notecard for the script to identify all the spot areas.
 
-
-
 **/
+integer IDLE_TIMEOUT_SECONDS = 600;
 
-// Salahzar Stenvaag February 2017
-// Note that when in design mode the board must have rotation 0
-// and should be used on the right side
-
-integer BOARD_CHANNEL = 1001;
 string UI_RESET = "RESET";
 string UI_DESIGN = "DESIGN";
-string UI_HELP = "HELP";
 
 string UI_ADDED_DATA = "added {0} data: {1}";
 string UI_FINISHED_NOTECARD = "Finished notecard read {0} lines";
@@ -85,7 +77,7 @@ integer LISTENER;
 integer DEBUG = 0;
 
 
-list NAMES; 
+list NAMES;
 list VALUES;
 
 
@@ -100,8 +92,6 @@ vector BOTTOMRIGHT;
 
 integer LINKNUMBER;
 string LINKNAME;
-vector RED = <1,0,0>;
-vector WHITE = <1,1,1>;
 integer TIMEOUT = 10;
 
 vector ST_COORD;
@@ -110,9 +100,11 @@ vector OFFSET;
 unlisten(){
     if (LISTENER != -1) llListenRemove(LISTENER);
 }
-info(string s) { infos(s,[]); }
-infos(string s, list args){
-	llSay(0,format(s,args));
+info(string s){
+    infos(s,[]);
+}
+infos(string s,list args){
+    llSay(0,format(s,args));
 }
 debug(string s){
     if (DEBUG == 1) llOwnerSay("DEBUG: " + s);
@@ -135,25 +127,26 @@ string find_hot_spot(vector st){
     debug("not found");
     return "";
 }
-string format(string text, list args)
-{
-	integer len=llGetListLength(args);
-	if(len==0) {
-		return text;
-	} else {
-		string ret=text;
-		integer i;
-		for(i=0;i<len;i++) {
-			integer pos=llSubStringIndex(ret,"{"+(string)i+"}");
-			if(pos!=-1) {
-				ret=llDeleteSubString(ret,pos,pos+llStringLength("{"+(string)i+"}")-1);
-				ret=llInsertString(ret,pos,llList2String(args,i));
-			} else {
-				return "error";
-			}
-		}
-		return ret;
-	}
+string format(string text,list args){
+    integer len = llGetListLength(args);
+    if (len == 0) {
+        return text;
+    }
+    else  {
+        string ret = text;
+        integer i;
+        for (i = 0; i < len; i++) {
+            integer pos = llSubStringIndex(ret,"{" + (string)i + "}");
+            if (pos != -1) {
+                ret = llDeleteSubString(ret,pos,pos + llStringLength("{" + (string)i + "}") - 1);
+                ret = llInsertString(ret,pos,llList2String(args,i));
+            }
+            else  {
+                return "error";
+            }
+        }
+        return ret;
+    }
 }
 
 process_line_notecard(string str){
@@ -164,40 +157,40 @@ process_line_notecard(string str){
     NAMES += llStringTrim(name,STRING_TRIM);
     string rot = llList2String(pieces,1);
     VALUES += [(rotation)rot];
-    infos(UI_ADDED_DATA, [name, rot]);
+    //infos(UI_ADDED_DATA,[name,rot]);
 }
 // return list of positions for unit testing
-list starting_order(integer n) {
-	list pos = [];
+list starting_order(integer n){
+    list pos = [];
     integer i;
-    for(i=0; i < n; i++) pos+=i;
+    for (i = 0; i < n; i++) pos += i;
     return pos;
 }
-list shuffle(list input) {
-	return llListRandomize(input,1);
+list shuffle(list input){
+    return llListRandomize(input,1);
 }
 
-list random_helper(integer n, vector scale, integer random){
-	if(n<1) return [];
+list random_helper(integer n,vector scale,integer random){
+    if (n < 1) return [];
     debug("performing initial positining of labels");
-    list ret = []; 
+    list ret = [];
     list x = starting_order(n);
-    if(random) x = shuffle(x);
-    integer i; float delta = scale.z / n;
+    if (random) x = shuffle(x);
+    integer i;
+    float delta = scale.z / n;
     for (i = 0; i < n; i++) {
-    	 float height = delta * i + delta / 2 - scale.z / 2;
-    	vector point = <0, -0.5 * scale.y, height>;
+        float height = delta * i + delta / 2 - scale.z / 2;
+        vector point = <0,-0.5 * scale.y,height>;
         integer j = llList2Integer(x,i);
-        debug("moving label #" + (string)j + " to " +(string)point);
-        
+        debug("moving label #" + (string)j + " to " + (string)point);
         move(j + 2,point);
         ret += point;
     }
     return ret;
 }
 
-random() {
-	random_helper(llGetNumberOfPrims()-1,llGetScale(), TRUE);
+random(){
+    random_helper(llGetNumberOfPrims() - 1,llGetScale(),TRUE);
 }
 
 setTimer(){
@@ -208,24 +201,24 @@ offTimer(){
     llSetTimerEvent(0);
 }
 
-string fixed(float input, integer precision){
-    if ((precision = (precision - 7) - (precision < 1)) & 0xFFFFFFFF80000000) 
-    	return llGetSubString((string)input,0,precision);
+string fixed(float input,integer precision){
+    if ((precision = (precision - 7) - (precision < 1)) & -2147483648) return llGetSubString((string)input,0,precision);
     return (string)input;
 }
-string fixedvector(vector v, integer precision){
+string fixedvector(vector v,integer precision){
     return fixed(v.x,precision) + "," + fixed(v.y,precision);
 }
 
 
 
-move(integer link, vector to){
+move(integer link,vector to){
     llSetLinkPrimitiveParamsFast(link,[PRIM_POS_LOCAL,to,PRIM_POS_LOCAL,to,PRIM_POS_LOCAL,to]);
 }
 
 // default state will read configuration and go to
 // run state
 default {
+
 
     state_entry() {
         random();
@@ -234,6 +227,7 @@ default {
         NCLINE = 0;
         llGetNotecardLine(NCNAME,NCLINE);
     }
+
 
     dataserver(key id,string str) {
         if (str == EOF) {
@@ -250,10 +244,18 @@ default {
 
 state run {
 
+
     state_entry() {
         info(UI_CLICK_A_LABEL);
-        llListen(1001,"",NULL_KEY,"");
+        llListen(5,"",NULL_KEY,"");
+        llSetTimerEvent(IDLE_TIMEOUT_SECONDS);
     }
+    
+    timer() {
+        random();
+        llResetScript();
+    }
+
 
     touch_start(integer count) {
         LINKNUMBER = llDetectedLinkNumber(0);
@@ -263,13 +265,15 @@ state run {
             state moveLink;
             return;
         }
-        key avatar = llDetectedKey(0); 
-        if(avatar==llGetOwner()){
-        	llDialog(avatar,"",[ UI_DESIGN, UI_RESET ], 1001);
-        } else {
-        	info(UI_MUST_CLICK_A_LABEL);
+        key avatar = llDetectedKey(0);
+        if (avatar == llGetOwner()) {
+            llDialog(avatar,"prepositions",[UI_DESIGN,UI_RESET],1001);
+        }
+        else  {
+            info(UI_MUST_CLICK_A_LABEL);
         }
     }
+
 
     listen(integer channel,string name,key id,string message) {
         debug("received command " + message);
@@ -287,10 +291,12 @@ state run {
 }
 state moveLink {
 
+
     state_entry() {
-        infos(UI_CLICK_WHERE_TO_MOVE, [LINKNAME]);
+        infos(UI_CLICK_WHERE_TO_MOVE,[LINKNAME]);
         setTimer();
     }
+
 
     touch_start(integer count) {
         integer link = llDetectedLinkNumber(0);
@@ -307,15 +313,16 @@ state moveLink {
                 move(LINKNUMBER,OFFSET);
             }
             else  {
-                infos(UI_WRONG, [LINKNAME]);
+                infos(UI_WRONG,[LINKNAME]);
             }
             offTimer();
             state run;
         }
         else  {
-            infos(UI_CLICK_WHERE_YOU_THINK, [LINKNAME]);
+            infos(UI_CLICK_WHERE_YOU_THINK,[LINKNAME]);
         }
     }
+
 
     timer() {
         offTimer();
@@ -324,16 +331,19 @@ state moveLink {
 }
 state design {
 
+
     state_entry() {
         LISTENER = -1;
         info(UI_CLICK_ON_TOPLEFT);
         setTimer();
     }
 
+
     timer() {
         unlisten();
         state run;
     }
+
 
     listen(integer channel,string name,key id,string str) {
         debug("received " + str);
@@ -348,6 +358,7 @@ state design {
     }
 
 
+
     touch_start(integer total_number) {
         setTimer();
         info(UI_NAME_SPOT);
@@ -358,17 +369,19 @@ state design {
 }
 state design_bottom_right {
 
+
     state_entry() {
         infos(UI_CLICK_BOTTOMRIGHT,[SPOTNAME]);
         llListen(-1,"",NULL_KEY,"");
         setTimer();
     }
 
+
     touch_start(integer total_number) {
         BOTTOMRIGHT = llDetectedTouchST(0);
         debug("BOTTOMRIGHT: " + (string)BOTTOMRIGHT);
         string rots = "<" + fixedvector(TOPLEFT,3) + "," + fixedvector(BOTTOMRIGHT,3) + ">";
-        rotation rot = (rotation)(rots);
+        rotation rot = (rotation)rots;
         debug("rot: " + rots);
         infos(UI_ADD_TO_NOTECARD,[SPOTNAME,rots]);
         state design;
